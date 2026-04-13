@@ -1,10 +1,11 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from .models import Usuario, TrabalhoTCC
+from .models import Usuario, TrabalhoTCC, Entrega, Feedback, AtaOrientacao, Banca, ChecklistDocumental, CronogramaPrazo
 
-# Como estamos usando um modelo de usuário customizado, 
-# usamos o UserAdmin para que os campos de senha funcionem direitinho
-admin.site.register(Usuario, UserAdmin)
-
-# Registra o modelo de TCC
+admin.site.register(Usuario)
 admin.site.register(TrabalhoTCC)
+admin.site.register(Entrega)
+admin.site.register(Feedback)
+admin.site.register(AtaOrientacao)
+admin.site.register(Banca)
+admin.site.register(ChecklistDocumental)
+admin.site.register(CronogramaPrazo)

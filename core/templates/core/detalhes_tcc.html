@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Detalhes do TCC</title>
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>{{ tcc.titulo }}</h1>
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Voltar</a>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header d-flex justify-content-between">
+                        <h5 class="mb-0">Arquivos Enviados</h5>
+                        <a href="{% url 'fazer_entrega' tcc.id %}" class="btn btn-sm btn-primary">+ Novo Arquivo</a>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            {% for entrega in entregas %}
+                            <li class="list-group-item d-flex justify-content-between align-items-start">
+                                <div class="ms-2 me-auto">
+                                    <div class="fw-bold">{{ entrega.descricao }}</div>
+                                    <small class="text-muted">Enviado em: {{ entrega.data_envio|date:"d/m/Y H:i" }}</small>
+                                    <br>
+                                    <a href="{{ entrega.arquivo.url }}" target="_blank" class="btn btn-link btn-sm p-0">Ver PDF</a>
+                                </div>
+                                {% if not entrega.feedback %}
+                                    {% if user.tipo == 'ORIENTADOR' %}
+                                        <a href="{% url 'dar_feedback' entrega.id %}" class="btn btn-sm btn-warning">Dar Feedback</a>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-success rounded-pill">Feedback OK</span>
+                                {% endif %}
+                            </li>
+                            {% empty %}
+                            <p class="text-muted">Nenhum arquivo enviado.</p>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-header d-flex justify-content-between">
+                        <h5 class="mb-0">Reuniões / Atas</h5>
+                        <a href="{% url 'registrar_ata' tcc.id %}" class="btn btn-sm btn-outline-primary">+ Registrar</a>
+                    </div>
+                    <div class="card-body">
+                        {% for ata in atas %}
+                        <div class="border-bottom mb-2 pb-2">
+                            <small class="fw-bold">{{ ata.data_reuniao|date:"d/m/Y" }}</small>
+                            <p class="small text-muted">{{ ata.resumo_discussao|truncatechars:100 }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
