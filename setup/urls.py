@@ -13,6 +13,7 @@ urlpatterns = [
     path('tcc/<int:tcc_id>/entrega/', views.fazer_entrega, name='fazer_entrega'),
     path('tcc/<int:tcc_id>/ata/', views.registrar_ata, name='registrar_ata'),
     path('entrega/<int:entrega_id>/feedback/', views.dar_feedback, name='dar_feedback'),
+    path('tcc/<int:tcc_id>/banca/', views.gerenciar_banca, name='gerenciar_banca'),
 ]
 
 # Configuração para que o Django consiga mostrar os arquivos de upload no navegador
