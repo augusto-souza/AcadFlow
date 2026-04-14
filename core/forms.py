@@ -1,5 +1,19 @@
 from django import forms
-from .models import TrabalhoTCC, Entrega, Feedback, AtaOrientacao, Banca, ChecklistDocumental
+from django.contrib.auth.forms import UserCreationForm
+from .models import Usuario, TrabalhoTCC, Entrega, Feedback, AtaOrientacao, Banca, ChecklistDocumental
+
+# FORMULÁRIO DE CADASTRO DE USUÁRIO (Sign Up)
+class UsuarioCadastroForm(UserCreationForm):
+    class Meta(UserCreationForm.Meta):
+        model = Usuario
+        # Campos que aparecerão no formulário de cadastro
+        fields = UserCreationForm.Meta.fields + ('first_name', 'last_name', 'email', 'tipo')
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Aplica a classe do Bootstrap em todos os campos automaticamente
+        for field in self.fields.values():
+            field.widget.attrs['class'] = 'form-control'
 
 # RF02 - Formulário para o Aluno propor o tema
 class TrabalhoTCCForm(forms.ModelForm):

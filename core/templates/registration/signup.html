@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <link href="https://cdn.npm.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Criar Conta - AcadFlow</title>
+</head>
+<body class="bg-light">
+    <div class="container d-flex justify-content-center align-items-center vh-100">
+        <div class="card p-4 shadow" style="width: 450px;">
+            <h2 class="text-center mb-4">Criar Nova Conta</h2>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary w-100">Cadastrar</button>
+            </form>
+            <div class="mt-3 text-center">
+                <a href="{% url 'login' %}" class="small">Já tem uma conta? Entre aqui.</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
