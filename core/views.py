@@ -2,11 +2,14 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import FileResponse
 from django.template.loader import get_template
-from .models import TrabalhoTCC, Entrega, Feedback, AtaOrientacao, Banca, ChecklistDocumental
+from .models import (
+    TrabalhoTCC, Entrega, Feedback, AtaOrientacao, 
+    Banca, ChecklistDocumental, CronogramaPrazo
+)
 from .forms import (
     TrabalhoTCCForm, EntregaForm, FeedbackForm, 
     AtaOrientacaoForm, BancaForm, ChecklistDocumentalForm,
-    UsuarioCadastroForm  # Adicionado para o autocadastro
+    UsuarioCadastroForm, CronogramaPrazoForm
 )
 
 # Bibliotecas para PDF e Tempo
@@ -27,17 +30,23 @@ def signup(request):
         form = UsuarioCadastroForm()
     return render(request, 'registration/signup.html', {'form': form})
 
-# --- DASHBOARD PRINCIPAL ---
+# --- DASHBOARD PRINCIPAL (RF02/RF04) ---
 
 @login_required
 def dashboard(request):
-    # Se for Aluno, vê apenas os seus TCCs. Se for Orientador/Coordenador, vê todos.
+    # Lógica de visibilidade de TCCs
     if request.user.tipo == 'ALUNO':
         trabalhos = TrabalhoTCC.objects.filter(aluno=request.user)
     else:
         trabalhos = TrabalhoTCC.objects.all()
+    
+    # RF04 - Prazos do cronograma para exibir na lateral
+    prazos = CronogramaPrazo.objects.all().order_by('data_limite')
         
-    return render(request, 'core/dashboard.html', {'trabalhos': trabalhos})
+    return render(request, 'core/dashboard.html', {
+        'trabalhos': trabalhos,
+        'prazos': prazos
+    })
 
 # --- GESTÃO DE TCC (PROPOSTA) ---
 
@@ -70,7 +79,7 @@ def fazer_entrega(request, tcc_id):
         form = EntregaForm()
     return render(request, 'core/form_entrega.html', {'form': form, 'tcc': tcc})
 
-# --- FEEDBACK DO ORIENTADOR (RF07) ---
+# --- FEEDBACK E ATAS (RF07/RF08) ---
 
 @login_required
 def dar_feedback(request, entrega_id):
@@ -87,8 +96,6 @@ def dar_feedback(request, entrega_id):
         form = FeedbackForm()
     return render(request, 'core/form_feedback.html', {'form': form, 'entrega': entrega})
 
-# --- REGISTRO DE ATAS (RF08) ---
-
 @login_required
 def registrar_ata(request, tcc_id):
     tcc = get_object_or_404(TrabalhoTCC, pk=tcc_id)
@@ -103,7 +110,7 @@ def registrar_ata(request, tcc_id):
         form = AtaOrientacaoForm()
     return render(request, 'core/form_ata.html', {'form': form, 'tcc': tcc})
 
-# --- PÁGINA DE DETALHES DO TCC ---
+# --- PÁGINA DE DETALHES ---
 
 @login_required
 def detalhes_tcc(request, tcc_id):
@@ -116,13 +123,12 @@ def detalhes_tcc(request, tcc_id):
         'atas': atas
     })
 
-# --- GERENCIAR BANCA E NOTAS (RF09/RF13) ---
+# --- BANCA, NOTAS E PDF (RF09/RF13/RF14) ---
 
 @login_required
 def gerenciar_banca(request, tcc_id):
     tcc = get_object_or_404(TrabalhoTCC, pk=tcc_id)
     banca, created = Banca.objects.get_or_create(trabalho=tcc)
-    
     if request.method == 'POST':
         form = BancaForm(request.POST, instance=banca)
         if form.is_valid():
@@ -133,33 +139,50 @@ def gerenciar_banca(request, tcc_id):
             return redirect('detalhes_tcc', tcc_id=tcc.id)
     else:
         form = BancaForm(instance=banca)
-    
     return render(request, 'core/form_banca.html', {'form': form, 'tcc': tcc})
-
-# --- GERAR PDF DA ATA (RF14) ---
 
 @login_required
 def gerar_pdf_banca(request, tcc_id):
     tcc = get_object_or_404(TrabalhoTCC, pk=tcc_id)
     banca = getattr(tcc, 'banca', None)
-
     if not banca:
         return redirect('detalhes_tcc', tcc_id=tcc.id)
-
-    context = {
-        'tcc': tcc,
-        'banca': banca,
-        'data_atual': datetime.datetime.now(),
-    }
-
+    context = {'tcc': tcc, 'banca': banca, 'data_atual': datetime.datetime.now()}
     template = get_template('core/pdf_banca.html')
     html = template.render(context)
-
     result = io.BytesIO()
     pdf = pisa.pisaDocument(io.BytesIO(html.encode("UTF-8")), result)
-
     if not pdf.err:
         result.seek(0)
         return FileResponse(result, as_attachment=True, filename=f'Ata_Defesa_{tcc.aluno.username}.pdf')
-    
     return redirect('detalhes_tcc', tcc_id=tcc.id)
+
+# --- MÓDULOS DE COORDENAÇÃO (RF04/RF12) ---
+
+@login_required
+def gerenciar_checklist(request, tcc_id):
+    tcc = get_object_or_404(TrabalhoTCC, pk=tcc_id)
+    checklist, created = ChecklistDocumental.objects.get_or_create(trabalho=tcc)
+    if request.method == 'POST':
+        form = ChecklistDocumentalForm(request.POST, instance=checklist)
+        if form.is_valid():
+            form.save()
+            return redirect('detalhes_tcc', tcc_id=tcc.id)
+    else:
+        form = ChecklistDocumentalForm(instance=checklist)
+    return render(request, 'core/form_checklist.html', {'form': form, 'tcc': tcc})
+
+@login_required
+def gerenciar_cronograma(request):
+    """View para o Coordenador definir os prazos globais (RF04)"""
+    if request.user.tipo != 'COORDENADOR':
+        return redirect('dashboard')
+    if request.method == 'POST':
+        form = CronogramaPrazoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('dashboard')
+    else:
+        form = CronogramaPrazoForm()
+    prazos = CronogramaPrazo.objects.all().order_by('data_limite')
+    return render(request, 'core/form_cronograma.html', {'form': form, 'prazos': prazos})

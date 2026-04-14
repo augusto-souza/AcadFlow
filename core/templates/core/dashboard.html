@@ -3,49 +3,106 @@
 {% block title %}Dashboard - AcadFlow{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4 text-white">
-    <div>
-        <h2 class="fw-bold mb-0">Gestão de TCCs</h2>
-        <p class="opacity-75 mb-0">Acompanhe o progresso dos trabalhos</p>
-    </div>
-    {% if user.tipo == 'ALUNO' %}
-    <a href="{% url 'cadastrar_tcc' %}" class="btn btn-light rounded-pill px-4 shadow fw-bold text-primary">+ Nova Proposta</a>
-    {% endif %}
-</div>
+<div class="row">
+    <div class="col-lg-9">
+        <div class="d-flex justify-content-between align-items-center mb-4 text-white">
+            <div>
+                <h2 class="fw-bold mb-0">Gestão de TCCs</h2>
+                <p class="opacity-75 mb-0">Acompanhamento dos projetos acadêmicos</p>
+            </div>
+            {% if user.tipo == 'ALUNO' %}
+            <a href="{% url 'cadastrar_tcc' %}" class="btn btn-light rounded-pill px-4 shadow fw-bold text-primary">
+                <i class="bi bi-plus-lg"></i> Nova Proposta
+            </a>
+            {% endif %}
+        </div>
 
-<div class="glass-card card overflow-hidden">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th class="ps-4 py-3">Título</th>
-                    <th>Aluno</th>
-                    <th class="text-center">Status</th>
-                    <th class="text-center pe-4">Ação</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for trabalho in trabalhos %}
-                <tr>
-                    <td class="ps-4 py-3">
-                        <span class="fw-bold text-dark">{{ trabalho.titulo }}</span>
-                        <br><small class="text-muted">Criado em: {{ trabalho.data_criacao|date:"d/m/Y" }}</small>
-                    </td>
-                    <td>{{ trabalho.aluno.get_full_name|default:trabalho.aluno.username }}</td>
-                    <td class="text-center">
-                        <span class="badge rounded-pill p-2 px-3 {% if trabalho.status == 'SUBMETIDO' %}bg-warning text-dark{% elif trabalho.status == 'CONCLUIDO' %}bg-success{% else %}bg-primary{% endif %}">
-                            {{ trabalho.get_status_display }}
-                        </span>
-                    </td>
-                    <td class="text-center pe-4">
-                        <a href="{% url 'detalhes_tcc' trabalho.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">Ver Detalhes</a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="4" class="text-center py-5 text-muted">Nenhum TCC encontrado.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="glass-card card overflow-hidden border-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4 py-3">Título do Trabalho</th>
+                            <th>Discente</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center pe-4">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for trabalho in trabalhos %}
+                        <tr style="cursor: pointer;" onclick="window.location='{% url 'detalhes_tcc' trabalho.id %}'">
+                            <td class="ps-4 py-3">
+                                <span class="fw-bold text-dark d-block">{{ trabalho.titulo }}</span>
+                                <small class="text-muted">Iniciado em {{ trabalho.data_criacao|date:"d/m/Y" }}</small>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; font-size: 0.8rem;">
+                                        {{ trabalho.aluno.username|slice:":1"|upper }}
+                                    </div>
+                                    <span class="small">{{ trabalho.aluno.get_full_name|default:trabalho.aluno.username }}</span>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge rounded-pill p-2 px-3 shadow-sm
+                                    {% if trabalho.status == 'SUBMETIDO' %}bg-warning text-dark
+                                    {% elif trabalho.status == 'CONCLUIDO' %}bg-success
+                                    {% else %}bg-primary{% endif %}">
+                                    {{ trabalho.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="text-center pe-4">
+                                <a href="{% url 'detalhes_tcc' trabalho.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">
+                                    Visualizar
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5">
+                                <i class="bi bi-inbox display-4 text-muted opacity-25"></i>
+                                <p class="text-muted mt-2">Nenhum trabalho registrado até o momento.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3">
+        <div class="d-flex justify-content-between align-items-center mb-4 text-white">
+            <h4 class="fw-bold mb-0">Cronograma</h4>
+            {% if user.tipo == 'COORDENADOR' %}
+            <a href="{% url 'gerenciar_cronograma' %}" class="btn btn-sm btn-outline-light rounded-circle shadow-sm" title="Gerenciar Prazos">
+                <i class="bi bi-gear-fill"></i>
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="glass-card card p-4 border-0">
+            <h6 class="text-dark fw-bold mb-3 border-bottom pb-2">Datas Importantes</h6>
+            
+            {% for prazo in prazos %}
+            <div class="mb-4 position-relative ps-3 border-start border-2 border-primary">
+                <div class="small fw-bold text-dark mb-1">{{ prazo.descricao_etapa }}</div>
+                <div class="badge bg-danger-subtle text-danger" style="font-size: 0.75rem;">
+                    <i class="bi bi-alarm"></i> {{ prazo.data_limite|date:"d/m - H:i" }}
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-4">
+                <p class="text-muted small italic mb-0">Nenhum prazo definido pela coordenação.</p>
+            </div>
+            {% endfor %}
+
+            <div class="mt-2 pt-3 border-top">
+                <small class="text-muted italic" style="font-size: 0.7rem;">
+                    * Horário de Brasília (GMT-3)
+                </small>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

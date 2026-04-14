@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import Usuario, TrabalhoTCC, Entrega, Feedback, AtaOrientacao, Banca, ChecklistDocumental
+from .models import CronogramaPrazo
 
 # --- FUNÇÃO AUXILIAR PARA ESTILIZAR ---
 def aplicar_bootstrap(fields):
@@ -85,6 +86,18 @@ class ChecklistDocumentalForm(forms.ModelForm):
     class Meta:
         model = ChecklistDocumental
         fields = ['termo_autorizacao', 'nada_consta_biblioteca', 'versao_final_entregue']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        aplicar_bootstrap(self.fields)
+
+class CronogramaPrazoForm(forms.ModelForm):
+    class Meta:
+        model = CronogramaPrazo
+        fields = ['descricao_etapa', 'data_limite']
+        widgets = {
+            'data_limite': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
