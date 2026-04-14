@@ -1,8 +1,18 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.http import FileResponse
+from django.template.loader import get_template
 from .models import TrabalhoTCC, Entrega, Feedback, AtaOrientacao, Banca, ChecklistDocumental
-from .forms import TrabalhoTCCForm, EntregaForm, FeedbackForm, AtaOrientacaoForm, BancaForm, ChecklistDocumentalForm
-from .forms import BancaForm
+from .forms import (
+    TrabalhoTCCForm, EntregaForm, FeedbackForm, 
+    AtaOrientacaoForm, BancaForm, ChecklistDocumentalForm
+)
+
+# Bibliotecas para PDF e Tempo
+import io
+import datetime
+from xhtml2pdf import pisa
+
 # --- DASHBOARD PRINCIPAL ---
 @login_required
 def dashboard(request):
@@ -33,7 +43,6 @@ def cadastrar_tcc(request):
 def fazer_entrega(request, tcc_id):
     tcc = get_object_or_404(TrabalhoTCC, pk=tcc_id)
     if request.method == 'POST':
-        # IMPORTANTE: request.FILES é necessário para arquivos!
         form = EntregaForm(request.POST, request.FILES)
         if form.is_valid():
             entrega = form.save(commit=False)
@@ -87,17 +96,16 @@ def detalhes_tcc(request, tcc_id):
         'atas': atas
     })
 
+# --- GERENCIAR BANCA E NOTAS (RF09/RF13) ---
 @login_required
 def gerenciar_banca(request, tcc_id):
     tcc = get_object_or_404(TrabalhoTCC, pk=tcc_id)
-    # Tenta buscar uma banca já existente ou cria uma nova instância vinculada ao TCC
     banca, created = Banca.objects.get_or_create(trabalho=tcc)
     
     if request.method == 'POST':
         form = BancaForm(request.POST, instance=banca)
         if form.is_valid():
             form.save()
-            # Se a nota foi lançada, podemos mudar o status do TCC
             if banca.media_final:
                 tcc.status = 'CONCLUIDO'
                 tcc.save()
@@ -106,3 +114,30 @@ def gerenciar_banca(request, tcc_id):
         form = BancaForm(instance=banca)
     
     return render(request, 'core/form_banca.html', {'form': form, 'tcc': tcc})
+
+# --- GERAR PDF DA ATA (RF14) ---
+@login_required
+def gerar_pdf_banca(request, tcc_id):
+    tcc = get_object_or_404(TrabalhoTCC, pk=tcc_id)
+    banca = getattr(tcc, 'banca', None)
+
+    if not banca:
+        return redirect('detalhes_tcc', tcc_id=tcc.id)
+
+    context = {
+        'tcc': tcc,
+        'banca': banca,
+        'data_atual': datetime.datetime.now(),
+    }
+
+    template = get_template('core/pdf_banca.html')
+    html = template.render(context)
+
+    result = io.BytesIO()
+    pdf = pisa.pisaDocument(io.BytesIO(html.encode("UTF-8")), result)
+
+    if not pdf.err:
+        result.seek(0)
+        return FileResponse(result, as_attachment=True, filename=f'Ata_Defesa_{tcc.aluno.username}.pdf')
+    
+    return redirect('detalhes_tcc', tcc_id=tcc.id)

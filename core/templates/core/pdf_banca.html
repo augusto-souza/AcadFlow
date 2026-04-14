@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        @page { size: a4 portrait; margin: 2cm; }
+        body { font-family: sans-serif; color: #333; line-height: 1.6; }
+        .header { text-align: center; border-bottom: 2px solid #000; margin-bottom: 20px; }
+        .title { text-align: center; font-size: 18pt; font-weight: bold; margin-bottom: 30px; }
+        .section { margin-bottom: 15px; }
+        .label { font-weight: bold; }
+        .signature-box { margin-top: 50px; text-align: center; }
+        .line { border-top: 1px solid #000; width: 250px; margin: 0 auto; padding-top: 5px; }
+        .footer { position: fixed; bottom: 0; text-align: center; font-size: 9pt; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>ACADFLOW - SISTEMA DE GESTÃO ACADÊMICA</h2>
+        <p>Ata de Defesa de Trabalho de Conclusão de Curso</p>
+    </div>
+
+    <div class="title">ATA DE DEFESA</div>
+
+    <div class="section">
+        <p><span class="label">Título do Trabalho:</span> {{ tcc.titulo }}</p>
+        <p><span class="label">Discente:</span> {{ tcc.aluno.get_full_name|default:tcc.aluno.username }}</p>
+        <p><span class="label">Orientador:</span> {{ tcc.orientador.get_full_name }}</p>
+    </div>
+
+    <div class="section">
+        <p>No dia <span class="label">{{ banca.data_defesa|date:"d/m/Y" }}</span>, às <span class="label">{{ banca.data_defesa|date:"H:i" }}</span>, 
+        no local <span class="label">{{ banca.local }}</span>, realizou-se a defesa pública do trabalho citado acima.</p>
+    </div>
+
+    <div class="section">
+        <p><span class="label">Membros da Banca Examinadora:</span></p>
+        <ul>
+            <li>{{ banca.avaliador_1.get_full_name }}</li>
+            <li>{{ banca.avaliador_2.get_full_name }}</li>
+            <li>{{ banca.avaliador_3.get_full_name }}</li>
+        </ul>
+    </div>
+
+    <div class="section" style="background-color: #f2f2f2; padding: 10px;">
+        <p><span class="label">RESULTADO FINAL:</span></p>
+        <p>Média: <span class="label">{{ banca.media_final }}</span></p>
+        <p>Situação: <span class="label">{% if banca.media_final >= 6 %}APROVADO{% else %}REPROVADO{% endif %}</span></p>
+    </div>
+
+    <div class="signature-box">
+        <div style="float: left; width: 33%;">
+            <div class="line">Membro 1</div>
+        </div>
+        <div style="float: left; width: 33%;">
+            <div class="line">Membro 2</div>
+        </div>
+        <div style="float: left; width: 33%;">
+            <div class="line">Membro 3</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Documento gerado em {{ data_atual|date:"d/m/Y H:i" }} pelo AcadFlow.
+    </div>
+</body>
+</html>
