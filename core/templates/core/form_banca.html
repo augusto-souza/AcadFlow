@@ -1,46 +1,5 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <title>Gerenciar Banca</title>
-</head>
-<body class="bg-light">
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card shadow border-0">
-                    <div class="card-header bg-dark text-white">
-                        <h5 class="mb-0">Agendamento e Avaliação de Banca</h5>
-                    </div>
-                    <div class="card-body">
-                        <p><strong>Trabalho:</strong> {{ tcc.titulo }}</p>
-                        <form method="post">
-                            {% csrf_token %}
-                            <div class="row">
-                                <div class="col-md-6 mb-3">{{ form.data_defesa.label_tag }} {{ form.data_defesa }}</div>
-                                <div class="col-md-6 mb-3">{{ form.local.label_tag }} {{ form.local }}</div>
-                            </div>
-                            <hr>
-                            <h6>Membros da Banca</h6>
-                            <div class="mb-3">{{ form.avaliador_1.label_tag }} {{ form.avaliador_1 }}</div>
-                            <div class="mb-3">{{ form.avaliador_2.label_tag }} {{ form.avaliador_2 }}</div>
-                            <div class="mb-3">{{ form.avaliador_3.label_tag }} {{ form.avaliador_3 }}</div>
-                            <hr>
-                            <h6 class="text-danger">Lançamento de Notas (Preencher após a defesa)</h6>
-                            <div class="row">
-                                <div class="col-md-4">{{ form.nota_1.label_tag }} {{ form.nota_1 }}</div>
-                                <div class="col-md-4">{{ form.nota_2.label_tag }} {{ form.nota_2 }}</div>
-                                <div class="col-md-4">{{ form.nota_3.label_tag }} {{ form.nota_3 }}</div>
-                            </div>
-                            <div class="mt-4">
-                                <button type="submit" class="btn btn-primary">Salvar Dados da Banca</button>
-                                <a href="{% url 'detalhes_tcc' tcc.id %}" class="btn btn-link">Cancelar</a>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
+{% extends 'core/form_generic.html' %}
+{% block title %}Configurar Banca - AcadFlow{% endblock %}
+{% block form_icon %}<i class="bi bi-award text-info display-4"></i>{% endblock %}
+{% block form_title %}Gerenciar Banca{% endblock %}
+{% block form_subtitle %}Agendamento e Lançamento de Notas{% endblock %}

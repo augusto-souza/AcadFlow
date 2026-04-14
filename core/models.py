@@ -31,7 +31,6 @@ class TrabalhoTCC(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='SUBMETIDO')
     data_criacao = models.DateTimeField(auto_now_add=True)
     
-    # RF03 - Flag para o professor confirmar aceite
     aceite_orientador = models.BooleanField(default=False)
 
     def __str__(self):
@@ -43,7 +42,7 @@ class Entrega(models.Model):
     trabalho = models.ForeignKey(TrabalhoTCC, on_delete=models.CASCADE, related_name='entregas')
     arquivo = models.FileField(upload_to='tccs/entregas/')
     descricao = models.CharField(max_length=100, help_text="Ex: Versão inicial, Cap 1, etc.")
-    data_envio = models.DateTimeField(auto_now_add=True) # Registro de data/hora (Timestamp)
+    data_envio = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Entrega: {self.descricao} - {self.trabalho.titulo}"
@@ -71,14 +70,17 @@ class AtaOrientacao(models.Model):
         return f"Reunião {self.data_reuniao} - {self.trabalho.titulo}"
 
 
-# RF09, RF13, RF14 - Agendamento de Bancas e Notas
+# --- AJUSTADO PARA EVITAR INTEGRITY ERROR ---
 class Banca(models.Model):
     trabalho = models.OneToOneField(TrabalhoTCC, on_delete=models.CASCADE, related_name='banca')
-    data_defesa = models.DateTimeField()
-    local = models.CharField(max_length=100)
-    avaliador_1 = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, related_name='banca_aval1')
-    avaliador_2 = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, related_name='banca_aval2')
-    avaliador_3 = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, related_name='banca_aval3')
+    
+    # Adicionado null=True e blank=True para permitir criação do registro inicial vazio
+    data_defesa = models.DateTimeField(null=True, blank=True)
+    local = models.CharField(max_length=100, null=True, blank=True)
+    
+    avaliador_1 = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name='banca_aval1')
+    avaliador_2 = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name='banca_aval2')
+    avaliador_3 = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name='banca_aval3')
     
     nota_1 = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
     nota_2 = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
@@ -86,13 +88,13 @@ class Banca(models.Model):
     media_final = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
 
     def save(self, *args, **kwargs):
-        # RF13 - Cálculo automático da média final
-        if self.nota_1 and self.nota_2 and self.nota_3:
+        # Cálculo automático da média final
+        if self.nota_1 is not None and self.nota_2 is not None and self.nota_3 is not None:
             self.media_final = (self.nota_1 + self.nota_2 + self.nota_3) / 3
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"Banca de {self.trabalho.aluno.get_full_name()}"
+        return f"Banca de {self.trabalho.aluno.username}"
 
 
 # RF12 - Checklist Documental
@@ -106,9 +108,9 @@ class ChecklistDocumental(models.Model):
         return f"Checklist - {self.trabalho.titulo}"
 
 
-# RF04 - Cronograma de Entregas (Datas-limite globais definidas pela coordenação)
+# RF04 - Cronograma de Entregas
 class CronogramaPrazo(models.Model):
-    descricao_etapa = models.CharField(max_length=100) # Ex: Entrega do Projeto, Entrega Final
+    descricao_etapa = models.CharField(max_length=100)
     data_limite = models.DateTimeField()
 
     def __str__(self):
