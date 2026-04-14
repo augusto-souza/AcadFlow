@@ -20,6 +20,11 @@
                 <i class="bi bi-mortarboard-fill"></i> <strong>Orientador:</strong> 
                 {% if tcc.orientador %}
                     {{ tcc.orientador.get_full_name|default:tcc.orientador.username }}
+                    {% if user.tipo == 'COORDENADOR' %}
+                        <a href="{% url 'atribuir_orientador' tcc.id %}" class="btn btn-xs btn-outline-dark rounded-pill ms-2 px-2" style="font-size: 0.7rem;">
+                            <i class="bi bi-pencil"></i> Alterar
+                        </a>
+                    {% endif %}
                 {% else %}
                     <span class="badge bg-secondary-subtle text-secondary px-3 italic">Não atribuído</span>
                     {% if user.tipo == 'COORDENADOR' %}
@@ -77,7 +82,7 @@
                                 </div>
                             </div>
                             
-                            {% if user.tipo == 'ORIENTADOR' %}
+                            {% if user.tipo == 'ORIENTADOR' and user == tcc.orientador %}
                             <a href="{% url 'dar_feedback' entrega.id %}" class="btn btn-sm btn-warning rounded-pill shadow-sm">
                                 <i class="bi bi-chat-right-dots"></i> Novo Feedback
                             </a>
@@ -110,7 +115,7 @@
                             </div>
                             {% empty %}
                             <div class="alert alert-light border-0 py-2 small text-muted italic">
-                                <i class="bi bi-info-circle"></i> Nenhuma observação registrada para esta versão.
+                                <i class="bi bi-info-circle"></i> Nenhuma observação registrada.
                             </div>
                             {% endfor %}
                         </div>
@@ -118,7 +123,7 @@
                     {% empty %}
                     <div class="text-center py-5">
                         <i class="bi bi-cloud-slash display-4 text-muted opacity-25"></i>
-                        <p class="text-muted mt-2">Nenhum arquivo enviado até o momento.</p>
+                        <p class="text-muted mt-2">Nenhum arquivo enviado.</p>
                     </div>
                     {% endfor %}
                 </div>
@@ -130,7 +135,7 @@
         
         <div class="glass-card card mb-4 border-top border-5 border-info shadow border-0">
             <div class="card-body p-4 text-center">
-                <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-3 text-start">
                     <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-award text-info"></i> Banca</h5>
                     {% if user.tipo == 'COORDENADOR' %}
                     <a href="{% url 'gerenciar_banca' tcc.id %}" class="text-info"><i class="bi bi-gear-wide-connected"></i></a>
@@ -147,12 +152,12 @@
                             <small class="d-block opacity-75">MÉDIA FINAL</small>
                             <h2 class="fw-bold mb-1">{{ tcc.banca.media_final }}</h2>
                             <a href="{% url 'gerar_pdf_banca' tcc.id %}" class="btn btn-light btn-sm w-100 mt-2 rounded-pill fw-bold text-danger">
-                                <i class="bi bi-file-pdf"></i> Baixar Ata Oficial
+                                <i class="bi bi-file-pdf"></i> Baixar Ata PDF
                             </a>
                         </div>
                     {% endif %}
                 {% else %}
-                    <p class="text-muted small py-3">Banca aguardando agendamento.</p>
+                    <p class="text-muted small py-3">Defesa ainda não agendada.</p>
                 {% endif %}
             </div>
         </div>
@@ -161,7 +166,7 @@
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
                     <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-journal-check text-success"></i> Atas</h5>
-                    {% if user.tipo == 'ORIENTADOR' %}
+                    {% if user.tipo == 'ORIENTADOR' and user == tcc.orientador %}
                     <a href="{% url 'registrar_ata' tcc.id %}" class="btn btn-outline-success btn-sm rounded-circle"><i class="bi bi-plus"></i></a>
                     {% endif %}
                 </div>
@@ -181,7 +186,7 @@
         <div class="glass-card card border-top border-5 border-dark shadow border-0">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-clipboard-check"></i> Checklist</h5>
+                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-clipboard-check text-dark"></i> Checklist</h5>
                     {% if user.tipo == 'COORDENADOR' %}
                     <a href="{% url 'gerenciar_checklist' tcc.id %}" class="text-dark"><i class="bi bi-pencil-square"></i></a>
                     {% endif %}

@@ -1,21 +1,52 @@
 {% extends 'base.html' %}
+
+{% block title %}Definir Orientador - AcadFlow{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center py-5">
     <div class="col-md-5">
-        <div class="glass-card card p-4">
-            <h4 class="fw-bold text-center">Definir Orientador</h4>
-            <p class="text-center text-muted small">Projeto: {{ tcc.titulo }}</p>
+        <div class="mb-3">
+            <a href="{% url 'detalhes_tcc' tcc.id %}" class="text-white text-decoration-none fw-bold small">
+                <i class="bi bi-arrow-left-circle-fill"></i> VOLTAR PARA DETALHES
+            </a>
+        </div>
+
+        <div class="glass-card card p-4 border-0 shadow-lg">
+            <div class="text-center mb-4">
+                <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center p-3 mb-3">
+                    <i class="bi bi-person-badge text-primary display-5"></i>
+                </div>
+                <h4 class="fw-bold text-dark mt-2">Definir Orientador</h4>
+                <p class="text-muted small">Projeto: <strong>{{ tcc.titulo }}</strong></p>
+            </div>
+
             <form method="post">
                 {% csrf_token %}
-                <div class="mb-4">
-                    <label class="form-label fw-bold">Selecione o Professor</label>
-                    <select name="orientador" class="form-select">
+                
+                <div class="mb-4 text-start">
+                    <label class="form-label fw-bold text-dark">Selecione o Professor</label>
+                    <select name="orientador" class="form-select shadow-sm" required>
+                        <option value="" {% if not tcc.orientador %}selected{% endif %} disabled>Escolha um orientador...</option>
                         {% for professor in orientadores %}
-                        <option value="{{ professor.id }}">{{ professor.get_full_name|default:professor.username }}</option>
+                            <option value="{{ professor.id }}" {% if professor.id == tcc.orientador.id %}selected{% endif %}>
+                                {{ professor.get_full_name|default:professor.username }}
+                            </option>
                         {% endfor %}
                     </select>
+                    <div class="form-text mt-2">
+                        {% if tcc.orientador %}
+                            Este projeto já possui um orientador. Ao alterar, o novo professor assumirá a gestão dos feedbacks.
+                        {% else %}
+                        Apenas usuários cadastrados como orientadores aparecem nesta lista.
+                        {% endif %}
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-primary-custom w-100 shadow">Confirmar Atribuição</button>
+
+                <div class="d-grid mt-4">
+                    <button type="submit" class="btn btn-primary rounded-pill py-2 fw-bold shadow">
+                        {% if tcc.orientador %}Alterar Orientador{% else %}Confirmar Atribuição{% endif %}
+                    </button>
+                </div>
             </form>
         </div>
     </div>
