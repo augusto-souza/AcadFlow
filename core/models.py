@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
-# RF01 - Gestão de Perfis e Acesso
+# --- RF01: GESTÃO DE PERFIS E ACESSO ---
 class Usuario(AbstractUser):
     TIPOS = (
         ('ALUNO', 'Aluno'),
@@ -11,10 +11,10 @@ class Usuario(AbstractUser):
     tipo = models.CharField(max_length=15, choices=TIPOS, default='ALUNO')
 
     def __str__(self):
-        return f"{self.username} ({self.get_tipo_display()})"
+        return f"{self.get_full_name() or self.username} ({self.get_tipo_display()})"
 
 
-# RF02, RF03, RF04 - O projeto de TCC e Fluxo de Aceite
+# --- RF02, RF03: TRABALHO DE CONCLUSÃO DE CURSO ---
 class TrabalhoTCC(models.Model):
     STATUS_CHOICES = (
         ('SUBMETIDO', 'Aguardando Aprovação'),
@@ -31,13 +31,14 @@ class TrabalhoTCC(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='SUBMETIDO')
     data_criacao = models.DateTimeField(auto_now_add=True)
     
+    # Flag para controle de aceite do orientador ou atribuição pela coordenação
     aceite_orientador = models.BooleanField(default=False)
 
     def __str__(self):
         return self.titulo
 
 
-# RF05, RF06 - Upload de Documentos e Versionamento
+# --- RF05, RF06: ENTREGAS E VERSIONAMENTO ---
 class Entrega(models.Model):
     trabalho = models.ForeignKey(TrabalhoTCC, on_delete=models.CASCADE, related_name='entregas')
     arquivo = models.FileField(upload_to='tccs/entregas/')
@@ -45,21 +46,22 @@ class Entrega(models.Model):
     data_envio = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Entrega: {self.descricao} - {self.trabalho.titulo}"
+        return f"{self.descricao} - {self.trabalho.titulo}"
 
 
-# RF07 - Módulo de Feedback
+# --- RF07: MÓDULO DE FEEDBACK (Ajustado para múltiplos feedbacks) ---
 class Feedback(models.Model):
-    entrega = models.OneToOneField(Entrega, on_delete=models.CASCADE, related_name='feedback')
+    # Alterado para ForeignKey para permitir vários comentários por entrega
+    entrega = models.ForeignKey(Entrega, on_delete=models.CASCADE, related_name='feedbacks')
     comentario = models.TextField()
     data_feedback = models.DateTimeField(auto_now_add=True)
     orientador = models.ForeignKey(Usuario, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"Feedback para {self.entrega.descricao}"
+        return f"Feedback de {self.orientador.username} em {self.data_feedback.strftime('%d/%m/%Y')}"
 
 
-# RF08 - Registro de Orientação (Ata)
+# --- RF08: REGISTRO DE ORIENTAÇÃO (ATA) ---
 class AtaOrientacao(models.Model):
     trabalho = models.ForeignKey(TrabalhoTCC, on_delete=models.CASCADE, related_name='atas_reuniao')
     data_reuniao = models.DateField()
@@ -70,11 +72,11 @@ class AtaOrientacao(models.Model):
         return f"Reunião {self.data_reuniao} - {self.trabalho.titulo}"
 
 
-# --- AJUSTADO PARA EVITAR INTEGRITY ERROR ---
+# --- RF09, RF13, RF14: BANCA, NOTAS E MÉDIA ---
 class Banca(models.Model):
     trabalho = models.OneToOneField(TrabalhoTCC, on_delete=models.CASCADE, related_name='banca')
     
-    # Adicionado null=True e blank=True para permitir criação do registro inicial vazio
+    # Campos flexíveis (null=True) para permitir criação inicial sem erro
     data_defesa = models.DateTimeField(null=True, blank=True)
     local = models.CharField(max_length=100, null=True, blank=True)
     
@@ -88,7 +90,7 @@ class Banca(models.Model):
     media_final = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
 
     def save(self, *args, **kwargs):
-        # Cálculo automático da média final
+        # Cálculo automático da média se as 3 notas existirem
         if self.nota_1 is not None and self.nota_2 is not None and self.nota_3 is not None:
             self.media_final = (self.nota_1 + self.nota_2 + self.nota_3) / 3
         super().save(*args, **kwargs)
@@ -97,7 +99,7 @@ class Banca(models.Model):
         return f"Banca de {self.trabalho.aluno.username}"
 
 
-# RF12 - Checklist Documental
+# --- RF12: CHECKLIST DOCUMENTAL ---
 class ChecklistDocumental(models.Model):
     trabalho = models.OneToOneField(TrabalhoTCC, on_delete=models.CASCADE, related_name='checklist')
     termo_autorizacao = models.BooleanField(default=False)
@@ -108,10 +110,10 @@ class ChecklistDocumental(models.Model):
         return f"Checklist - {self.trabalho.titulo}"
 
 
-# RF04 - Cronograma de Entregas
+# --- RF04: CRONOGRAMA DE PRAZOS GLOBAIS ---
 class CronogramaPrazo(models.Model):
     descricao_etapa = models.CharField(max_length=100)
     data_limite = models.DateTimeField()
 
     def __str__(self):
-        return f"{self.descricao_etapa} até {self.data_limite}"
+        return f"{self.descricao_etapa} - {self.data_limite.strftime('%d/%m/%Y')}"

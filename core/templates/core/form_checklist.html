@@ -1,0 +1,9 @@
+{% extends 'core/form_generic.html' %}
+
+{% block title %}Checklist Documental - AcadFlow{% endblock %}
+
+{% block form_icon %}<i class="bi bi-card-checklist text-success display-4"></i>{% endblock %}
+{% block form_title %}Checklist Final de Documentos{% endblock %}
+{% block form_subtitle %}TCC: {{ tcc.titulo }}{% endblock %}
+
+{% block back_url %}{% url 'detalhes_tcc' tcc.id %}{% endblock %}
