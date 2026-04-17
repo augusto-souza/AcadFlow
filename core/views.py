@@ -334,3 +334,33 @@ def deletar_cronograma(request, prazo_id):
     prazo = get_object_or_404(CronogramaPrazo, pk=prazo_id)
     prazo.delete()
     return redirect('dashboard')
+
+@login_required
+def editar_ata(request, ata_id):
+    ata = get_object_or_404(AtaOrientacao, pk=ata_id)
+    tcc = ata.trabalho
+    
+    # Segurança: Apenas o orientador do trabalho pode editar
+    if request.user != tcc.orientador:
+        return redirect('detalhes_tcc', tcc_id=tcc.id)
+
+    if request.method == 'POST':
+        form = AtaOrientacaoForm(request.POST, instance=ata)
+        if form.is_valid():
+            form.save()
+            return redirect('detalhes_tcc', tcc_id=tcc.id)
+    else:
+        form = AtaOrientacaoForm(instance=ata)
+    
+    return render(request, 'core/form_ata.html', {'form': form, 'tcc': tcc, 'editando': True})
+
+@login_required
+def deletar_ata(request, ata_id):
+    ata = get_object_or_404(AtaOrientacao, pk=ata_id)
+    tcc_id = ata.trabalho.id
+    
+    # Segurança: Apenas o orientador do trabalho pode deletar
+    if request.user == ata.trabalho.orientador:
+        ata.delete()
+        
+    return redirect('detalhes_tcc', tcc_id=tcc_id)

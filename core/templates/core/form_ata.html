@@ -1,5 +1,33 @@
 {% extends 'core/form_generic.html' %}
-{% block title %}Registrar Ata - AcadFlow{% endblock %}
-{% block form_icon %}<i class="bi bi-journal-text text-success display-4"></i>{% endblock %}
-{% block form_title %}Ata de Orientação{% endblock %}
-{% block form_subtitle %}Registro da reunião presencial/online{% endblock %}
+
+{% block title %}
+    {% if editando %}Editar Ata{% else %}Nova Ata{% endif %} - AcadFlow
+{% endblock %}
+
+{% block form_icon %}
+    <i class="bi bi-journal-text text-success display-4"></i>
+{% endblock %}
+
+{% block form_title %}
+    {% if editando %}Editar Registo de Reunião{% else %}Registar Nova Ata{% endif %}
+{% endblock %}
+
+{% block form_subtitle %}
+    Projecto: <strong>{{ tcc.titulo }}</strong>
+{% endblock %}
+
+{% block extra_form_content %}
+    {% if editando %}
+    <div class="alert alert-info py-2 small mb-4">
+        <i class="bi bi-info-circle me-1"></i> Está a alterar um registo de reunião realizado anteriormente.
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block submit_button_text %}
+    {% if editando %}Guardar Alterações{% else %}Confirmar Registo{% endif %}
+{% endblock %}
+
+{% block back_url %}
+    {% url 'detalhes_tcc' tcc.id %}
+{% endblock %}

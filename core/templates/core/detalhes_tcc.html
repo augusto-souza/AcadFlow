@@ -73,7 +73,7 @@
                                     </a>
                                     {% if user == tcc.aluno %}
                                     <a href="{% url 'deletar_entrega' entrega.id %}" class="btn btn-sm btn-outline-secondary rounded-pill" 
-                                       onclick="return confirm('Isso excluirá o arquivo e todos os comentários. Confirmar?')">
+                                       onclick="return confirm('Isso excluirá o ficheiro e todos os comentários. Confirmar?')">
                                         <i class="bi bi-trash"></i>
                                     </a>
                                     {% endif %}
@@ -86,7 +86,8 @@
 
                         <div class="mt-3 ps-md-4">
                             {% for fb in entrega.feedbacks.all %}
-                                {% if not fb.parent %} <div class="p-3 mb-3 shadow-sm rounded-4 border-start border-4 
+                                {% if not fb.parent %}
+                                <div class="p-3 mb-3 shadow-sm rounded-4 border-start border-4 
                                     {% if fb.autor.tipo == 'ORIENTADOR' %} border-warning bg-white {% else %} border-primary bg-light {% endif %}">
                                     
                                     <div class="d-flex justify-content-between align-items-start mb-2">
@@ -121,7 +122,6 @@
                                                 <small class="text-muted" style="font-size: 0.6rem;">{{ resposta.data_feedback|date:"d/m H:i" }}</small>
                                             </div>
                                             <p class="mb-1 small text-muted">{{ resposta.comentario }}</p>
-                                            
                                             {% if resposta.autor == user %}
                                             <div class="text-end">
                                                 <a href="{% url 'editar_feedback' resposta.id %}" class="text-primary me-2" style="font-size: 0.65rem;">Editar</a>
@@ -134,17 +134,13 @@
                                     {% endif %}
                                 </div>
                                 {% endif %}
-                            {% empty %}
-                            <div class="text-center py-2">
-                                <p class="text-muted small italic mb-0">Nenhuma discussão iniciada nesta versão.</p>
-                            </div>
                             {% endfor %}
                         </div>
                     </div>
                     {% empty %}
                     <div class="text-center py-5">
                         <i class="bi bi-cloud-slash display-4 text-muted opacity-25"></i>
-                        <p class="text-muted mt-2">Aguardando o primeiro envio de arquivo.</p>
+                        <p class="text-muted mt-2">Sem ficheiros enviados.</p>
                     </div>
                     {% endfor %}
                 </div>
@@ -175,7 +171,7 @@
                     </div>
                     {% endif %}
                 {% else %}
-                    <p class="text-muted small">Aguardando agendamento da defesa.</p>
+                    <p class="text-muted small">Agendamento pendente.</p>
                 {% endif %}
             </div>
         </div>
@@ -188,14 +184,23 @@
                     <a href="{% url 'registrar_ata' tcc.id %}" class="btn btn-outline-success btn-sm rounded-circle"><i class="bi bi-plus"></i></a>
                     {% endif %}
                 </div>
-                <div style="max-height: 200px; overflow-y: auto;">
+                <div style="max-height: 250px; overflow-y: auto;">
                     {% for ata in atas %}
-                    <div class="mb-2 p-2 bg-light rounded-3 border-start border-3 border-success">
-                        <small class="fw-bold text-success d-block">{{ ata.data_reuniao|date:"d/m/Y" }}</small>
-                        <p class="small text-muted mb-0" style="font-size: 0.75rem;">{{ ata.resumo_discussao|truncatechars:70 }}</p>
+                    <div class="mb-3 p-3 bg-light rounded-4 border-start border-3 border-success shadow-sm position-relative">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <small class="fw-bold text-success d-block mb-1">{{ ata.data_reuniao|date:"d/m/Y" }}</small>
+                            
+                            {% if user == tcc.orientador %}
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'editar_ata' ata.id %}" class="text-primary small" title="Editar"><i class="bi bi-pencil"></i></a>
+                                <a href="{% url 'deletar_ata' ata.id %}" class="text-danger small" title="Eliminar" onclick="return confirm('Eliminar este registo?')"><i class="bi bi-trash"></i></a>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <p class="small text-muted mb-0">{{ ata.resumo_discussao|truncatechars:100 }}</p>
                     </div>
                     {% empty %}
-                    <p class="text-center text-muted small py-2">Nenhuma ata registrada.</p>
+                    <p class="text-center text-muted small py-2">Sem reuniões registadas.</p>
                     {% endfor %}
                 </div>
             </div>
