@@ -49,16 +49,20 @@ class Entrega(models.Model):
         return f"{self.descricao} - {self.trabalho.titulo}"
 
 
-# --- RF07: MÓDULO DE FEEDBACK (Ajustado para múltiplos feedbacks) ---
+# --- RF07: MÓDULO DE FEEDBACK (Ajustado para respostas encadeadas) ---
 class Feedback(models.Model):
-    # Alterado para ForeignKey para permitir vários comentários por entrega
     entrega = models.ForeignKey(Entrega, on_delete=models.CASCADE, related_name='feedbacks')
     comentario = models.TextField()
     data_feedback = models.DateTimeField(auto_now_add=True)
-    orientador = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    
+    # Renomeado para 'autor' para permitir que alunos também respondam
+    autor = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    
+    # Campo autorreferencial para permitir respostas em cima de feedbacks
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='respostas')
 
     def __str__(self):
-        return f"Feedback de {self.orientador.username} em {self.data_feedback.strftime('%d/%m/%Y')}"
+        return f"Comentário de {self.autor.username} em {self.data_feedback.strftime('%d/%m/%Y')}"
 
 
 # --- RF08: REGISTRO DE ORIENTAÇÃO (ATA) ---
@@ -76,7 +80,6 @@ class AtaOrientacao(models.Model):
 class Banca(models.Model):
     trabalho = models.OneToOneField(TrabalhoTCC, on_delete=models.CASCADE, related_name='banca')
     
-    # Campos flexíveis (null=True) para permitir criação inicial sem erro
     data_defesa = models.DateTimeField(null=True, blank=True)
     local = models.CharField(max_length=100, null=True, blank=True)
     
@@ -90,7 +93,6 @@ class Banca(models.Model):
     media_final = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
 
     def save(self, *args, **kwargs):
-        # Cálculo automático da média se as 3 notas existirem
         if self.nota_1 is not None and self.nota_2 is not None and self.nota_3 is not None:
             self.media_final = (self.nota_1 + self.nota_2 + self.nota_3) / 3
         super().save(*args, **kwargs)

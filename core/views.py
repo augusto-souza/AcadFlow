@@ -138,6 +138,15 @@ def atribuir_orientador(request, tcc_id):
         'orientadores': orientadores
     })
 
+@login_required
+def deletar_tcc(request, tcc_id):
+    tcc = get_object_or_404(TrabalhoTCC, pk=tcc_id)
+    
+    # Segurança: Apenas o aluno dono da proposta pode deletar
+    if request.user == tcc.aluno:
+        tcc.delete()
+    
+    return redirect('dashboard')
 
 # --- 4. ENTREGAS E FEEDBACKS (RF05, RF06, RF07) ---
 
@@ -255,3 +264,47 @@ def gerar_pdf_banca(request, tcc_id):
         result.seek(0)
         return FileResponse(result, as_attachment=True, filename=f'Ata_Defesa_{tcc.aluno.username}.pdf')
     return redirect('detalhes_tcc', tcc_id=tcc.id)
+
+@login_required
+def dar_feedback(request, entrega_id, parent_id=None):
+    entrega = get_object_or_404(Entrega, pk=entrega_id)
+    parent = None
+    if parent_id:
+        parent = get_object_or_404(Feedback, pk=parent_id)
+
+    if request.method == 'POST':
+        form = FeedbackForm(request.POST)
+        if form.is_valid():
+            feedback = form.save(commit=False)
+            feedback.entrega = entrega
+            feedback.autor = request.user
+            feedback.parent = parent # Vincula ao comentário "pai" se existir
+            feedback.save()
+            return redirect('detalhes_tcc', tcc_id=entrega.trabalho.id)
+    else:
+        form = FeedbackForm()
+        
+    return render(request, 'core/form_feedback.html', {'form': form, 'entrega': entrega})
+
+@login_required
+def editar_feedback(request, feedback_id):
+    feedback = get_object_or_404(Feedback, pk=feedback_id)
+    
+    # Segurança: Apenas o autor original pode editar o seu comentário
+    if request.user != feedback.autor:
+        return redirect('detalhes_tcc', tcc_id=feedback.entrega.trabalho.id)
+
+    if request.method == 'POST':
+        form = FeedbackForm(request.POST, instance=feedback)
+        if form.is_valid():
+            form.save()
+            return redirect('detalhes_tcc', tcc_id=feedback.entrega.trabalho.id)
+    else:
+        # O instance=feedback faz com que o formulário já venha com o texto atual
+        form = FeedbackForm(instance=feedback)
+    
+    return render(request, 'core/form_feedback.html', {
+        'form': form, 
+        'entrega': feedback.entrega, 
+        'editando': True
+    })

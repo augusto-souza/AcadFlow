@@ -14,14 +14,14 @@
         <div class="col-md-8">
             <h1 class="display-6 fw-bold text-dark mb-1">{{ tcc.titulo }}</h1>
             <p class="text-muted mb-0">
-                <i class="bi bi-person-fill"></i> <strong>Aluno:</strong> {{ tcc.aluno.get_full_name|default:tcc.aluno.username }}
+                <i class="bi bi-person-fill text-primary"></i> <strong>Aluno:</strong> {{ tcc.aluno.get_full_name|default:tcc.aluno.username }}
             </p>
             <p class="text-muted mb-0">
-                <i class="bi bi-mortarboard-fill"></i> <strong>Orientador:</strong> 
+                <i class="bi bi-mortarboard-fill text-primary"></i> <strong>Orientador:</strong> 
                 {% if tcc.orientador %}
                     {{ tcc.orientador.get_full_name|default:tcc.orientador.username }}
                     {% if user.tipo == 'COORDENADOR' %}
-                        <a href="{% url 'atribuir_orientador' tcc.id %}" class="btn btn-xs btn-outline-dark rounded-pill ms-2 px-2" style="font-size: 0.7rem;">
+                        <a href="{% url 'atribuir_orientador' tcc.id %}" class="btn btn-xs btn-outline-dark rounded-pill ms-2 px-2 py-0" style="font-size: 0.7rem;">
                             <i class="bi bi-pencil"></i> Alterar
                         </a>
                     {% endif %}
@@ -29,7 +29,7 @@
                     <span class="badge bg-secondary-subtle text-secondary px-3 italic">Não atribuído</span>
                     {% if user.tipo == 'COORDENADOR' %}
                         <a href="{% url 'atribuir_orientador' tcc.id %}" class="btn btn-sm btn-dark rounded-pill ms-2 shadow-sm">
-                            <i class="bi bi-person-plus"></i> Atribuir Agora
+                            <i class="bi bi-person-plus"></i> Atribuir
                         </a>
                     {% endif %}
                 {% endif %}
@@ -49,7 +49,7 @@
         <div class="glass-card card h-100 border-0 shadow">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-                    <h4 class="fw-bold mb-0 text-dark"><i class="bi bi-folder2-open text-primary"></i> Histórico de Entregas</h4>
+                    <h4 class="fw-bold mb-0 text-dark"><i class="bi bi-chat-dots-fill text-primary"></i> Entregas e Discussão</h4>
                     {% if user.tipo == 'ALUNO' and tcc.status != 'CONCLUIDO' %}
                     <a href="{% url 'fazer_entrega' tcc.id %}" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
                         <i class="bi bi-upload"></i> Nova Entrega
@@ -60,62 +60,83 @@
                 <div class="list-group list-group-flush">
                     {% for entrega in entregas %}
                     <div class="list-group-item bg-transparent px-0 py-4 border-bottom">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="d-flex justify-content-between align-items-start mb-3 bg-light p-3 rounded-4 shadow-sm">
                             <div>
                                 <h5 class="fw-bold text-dark mb-1">{{ entrega.descricao }}</h5>
                                 <small class="text-muted d-block mb-3">
-                                    <i class="bi bi-calendar3"></i> Enviado em {{ entrega.data_envio|date:"d/m/Y \à\s H:i" }}
+                                    <i class="bi bi-calendar3"></i> Enviado em {{ entrega.data_envio|date:"d/m/Y - H:i" }}
                                 </small>
                                 
                                 <div class="d-flex gap-2">
-                                    <a href="{{ entrega.arquivo.url }}" target="_blank" class="btn btn-sm btn-outline-danger rounded-pill px-3">
-                                        <i class="bi bi-file-earmark-pdf"></i> Visualizar PDF
+                                    <a href="{{ entrega.arquivo.url }}" target="_blank" class="btn btn-sm btn-danger rounded-pill px-3 fw-bold shadow-sm">
+                                        <i class="bi bi-file-earmark-pdf"></i> VER PDF
                                     </a>
-
                                     {% if user == tcc.aluno %}
-                                    <a href="{% url 'deletar_entrega' entrega.id %}" 
-                                       class="btn btn-sm btn-outline-secondary rounded-pill px-3"
-                                       onclick="return confirm('Tem certeza que deseja remover este arquivo? Isso também apagará os feedbacks associados.')">
-                                        <i class="bi bi-trash"></i> Remover
+                                    <a href="{% url 'deletar_entrega' entrega.id %}" class="btn btn-sm btn-outline-secondary rounded-pill" 
+                                       onclick="return confirm('Isso excluirá o arquivo e todos os comentários. Confirmar?')">
+                                        <i class="bi bi-trash"></i>
                                     </a>
                                     {% endif %}
                                 </div>
                             </div>
-                            
-                            {% if user.tipo == 'ORIENTADOR' and user == tcc.orientador %}
-                            <a href="{% url 'dar_feedback' entrega.id %}" class="btn btn-sm btn-warning rounded-pill shadow-sm">
-                                <i class="bi bi-chat-right-dots"></i> Novo Feedback
+                            <a href="{% url 'dar_feedback' entrega.id %}" class="btn btn-sm btn-dark rounded-pill px-3">
+                                <i class="bi bi-plus-circle"></i> Comentar
                             </a>
-                            {% endif %}
                         </div>
 
                         <div class="mt-3 ps-md-4">
                             {% for fb in entrega.feedbacks.all %}
-                            <div class="p-3 bg-white rounded-4 border-start border-4 border-warning mb-3 shadow-sm">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <p class="text-dark small mb-0 pe-3">"{{ fb.comentario }}"</p>
+                                {% if not fb.parent %} <div class="p-3 mb-3 shadow-sm rounded-4 border-start border-4 
+                                    {% if fb.autor.tipo == 'ORIENTADOR' %} border-warning bg-white {% else %} border-primary bg-light {% endif %}">
                                     
-                                    {% if user == fb.orientador %}
-                                    <div class="d-flex gap-2">
-                                        <a href="{% url 'editar_feedback' fb.id %}" class="text-primary" title="Editar">
-                                            <i class="bi bi-pencil-square"></i>
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <strong class="small {% if fb.autor.tipo == 'ORIENTADOR' %} text-warning {% else %} text-primary {% endif %}">
+                                            {{ fb.autor.get_full_name|default:fb.autor.username }} 
+                                            <span class="text-muted fw-normal" style="font-size: 0.7rem;">({{ fb.autor.get_tipo_display }})</span>
+                                        </strong>
+                                        
+                                        {% if fb.autor == user %}
+                                        <div class="d-flex gap-2">
+                                            <a href="{% url 'editar_feedback' fb.id %}" class="text-muted"><i class="bi bi-pencil-square" style="font-size: 0.85rem;"></i></a>
+                                            <a href="{% url 'deletar_feedback' fb.id %}" class="text-danger" onclick="return confirm('Apagar comentário?')"><i class="bi bi-trash" style="font-size: 0.85rem;"></i></a>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <p class="text-dark mb-2" style="font-size: 0.9rem;">{{ fb.comentario }}</p>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted" style="font-size: 0.65rem;">{{ fb.data_feedback|date:"d/m H:i" }}</small>
+                                        <a href="{% url 'responder_feedback' entrega.id fb.id %}" class="text-decoration-none fw-bold small">
+                                            <i class="bi bi-reply-all-fill"></i> Responder
                                         </a>
-                                        <a href="{% url 'deletar_feedback' fb.id %}" class="text-danger" title="Apagar" 
-                                           onclick="return confirm('Apagar este comentário permanentemente?')">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
+                                    </div>
+
+                                    {% if fb.respostas.all %}
+                                    <div class="mt-3 ms-4 ps-3 border-start border-2 border-light-subtle">
+                                        {% for resposta in fb.respostas.all %}
+                                        <div class="p-2 mb-2 bg-light bg-opacity-75 rounded-3 shadow-sm position-relative">
+                                            <div class="d-flex justify-content-between">
+                                                <strong class="small text-dark" style="font-size: 0.75rem;">{{ resposta.autor.username }}</strong>
+                                                <small class="text-muted" style="font-size: 0.6rem;">{{ resposta.data_feedback|date:"d/m H:i" }}</small>
+                                            </div>
+                                            <p class="mb-1 small text-muted">{{ resposta.comentario }}</p>
+                                            
+                                            {% if resposta.autor == user %}
+                                            <div class="text-end">
+                                                <a href="{% url 'editar_feedback' resposta.id %}" class="text-primary me-2" style="font-size: 0.65rem;">Editar</a>
+                                                <a href="{% url 'deletar_feedback' resposta.id %}" class="text-danger" style="font-size: 0.65rem;" onclick="return confirm('Apagar?')">Excluir</a>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        {% endfor %}
                                     </div>
                                     {% endif %}
                                 </div>
-                                <div class="text-end pt-2 border-top">
-                                    <small class="text-muted italic" style="font-size: 0.7rem;">
-                                        Por: {{ fb.orientador.get_full_name|default:fb.orientador.username }} em {{ fb.data_feedback|date:"d/m H:i" }}
-                                    </small>
-                                </div>
-                            </div>
+                                {% endif %}
                             {% empty %}
-                            <div class="alert alert-light border-0 py-2 small text-muted italic">
-                                <i class="bi bi-info-circle"></i> Nenhuma observação registrada.
+                            <div class="text-center py-2">
+                                <p class="text-muted small italic mb-0">Nenhuma discussão iniciada nesta versão.</p>
                             </div>
                             {% endfor %}
                         </div>
@@ -123,7 +144,7 @@
                     {% empty %}
                     <div class="text-center py-5">
                         <i class="bi bi-cloud-slash display-4 text-muted opacity-25"></i>
-                        <p class="text-muted mt-2">Nenhum arquivo enviado.</p>
+                        <p class="text-muted mt-2">Aguardando o primeiro envio de arquivo.</p>
                     </div>
                     {% endfor %}
                 </div>
@@ -134,30 +155,27 @@
     <div class="col-lg-4">
         
         <div class="glass-card card mb-4 border-top border-5 border-info shadow border-0">
-            <div class="card-body p-4 text-center">
-                <div class="d-flex justify-content-between align-items-center mb-3 text-start">
-                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-award text-info"></i> Banca</h5>
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-award-fill text-info"></i> Defesa</h5>
                     {% if user.tipo == 'COORDENADOR' %}
-                    <a href="{% url 'gerenciar_banca' tcc.id %}" class="text-info"><i class="bi bi-gear-wide-connected"></i></a>
+                    <a href="{% url 'gerenciar_banca' tcc.id %}" class="text-info"><i class="bi bi-gear-fill"></i></a>
                     {% endif %}
                 </div>
-
                 {% if tcc.banca.data_defesa %}
-                    <div class="bg-light p-3 rounded-4 mb-3 small text-start">
-                        <div class="mb-1"><strong><i class="bi bi-calendar-check"></i></strong> {{ tcc.banca.data_defesa|date:"d/m/Y - H:i" }}</div>
-                        <div><strong><i class="bi bi-geo-alt"></i></strong> {{ tcc.banca.local }}</div>
+                    <div class="bg-light p-3 rounded-4 mb-3 small shadow-sm">
+                        <div class="mb-1"><i class="bi bi-calendar-event me-2"></i>{{ tcc.banca.data_defesa|date:"d/m/Y - H:i" }}</div>
+                        <div><i class="bi bi-geo-alt me-2"></i>{{ tcc.banca.local }}</div>
                     </div>
                     {% if tcc.banca.media_final %}
-                        <div class="bg-success text-white p-3 rounded-4 shadow">
-                            <small class="d-block opacity-75">MÉDIA FINAL</small>
-                            <h2 class="fw-bold mb-1">{{ tcc.banca.media_final }}</h2>
-                            <a href="{% url 'gerar_pdf_banca' tcc.id %}" class="btn btn-light btn-sm w-100 mt-2 rounded-pill fw-bold text-danger">
-                                <i class="bi bi-file-pdf"></i> Baixar Ata PDF
-                            </a>
-                        </div>
+                    <div class="bg-success text-white p-3 rounded-4 shadow text-center">
+                        <small class="d-block opacity-75 small">MÉDIA FINAL</small>
+                        <h2 class="fw-bold mb-1">{{ tcc.banca.media_final }}</h2>
+                        <a href="{% url 'gerar_pdf_banca' tcc.id %}" class="btn btn-light btn-sm w-100 mt-2 rounded-pill fw-bold text-danger">PDF ATA</a>
+                    </div>
                     {% endif %}
                 {% else %}
-                    <p class="text-muted small py-3">Defesa ainda não agendada.</p>
+                    <p class="text-muted small">Aguardando agendamento da defesa.</p>
                 {% endif %}
             </div>
         </div>
@@ -165,19 +183,19 @@
         <div class="glass-card card mb-4 border-top border-5 border-success shadow border-0">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-journal-check text-success"></i> Atas</h5>
+                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-journal-text text-success"></i> Reuniões</h5>
                     {% if user.tipo == 'ORIENTADOR' and user == tcc.orientador %}
                     <a href="{% url 'registrar_ata' tcc.id %}" class="btn btn-outline-success btn-sm rounded-circle"><i class="bi bi-plus"></i></a>
                     {% endif %}
                 </div>
-                <div style="max-height: 250px; overflow-y: auto;">
+                <div style="max-height: 200px; overflow-y: auto;">
                     {% for ata in atas %}
-                    <div class="mb-3 p-3 bg-light rounded-4 border-start border-3 border-success shadow-sm">
-                        <small class="fw-bold text-success d-block mb-1">{{ ata.data_reuniao|date:"d/m/Y" }}</small>
-                        <p class="small text-muted mb-0">{{ ata.resumo_discussao|truncatechars:100 }}</p>
+                    <div class="mb-2 p-2 bg-light rounded-3 border-start border-3 border-success">
+                        <small class="fw-bold text-success d-block">{{ ata.data_reuniao|date:"d/m/Y" }}</small>
+                        <p class="small text-muted mb-0" style="font-size: 0.75rem;">{{ ata.resumo_discussao|truncatechars:70 }}</p>
                     </div>
                     {% empty %}
-                    <p class="text-center text-muted small py-3">Nenhuma reunião registrada.</p>
+                    <p class="text-center text-muted small py-2">Nenhuma ata registrada.</p>
                     {% endfor %}
                 </div>
             </div>
@@ -186,7 +204,7 @@
         <div class="glass-card card border-top border-5 border-dark shadow border-0">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-clipboard-check text-dark"></i> Checklist</h5>
+                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-check2-square"></i> Checklist</h5>
                     {% if user.tipo == 'COORDENADOR' %}
                     <a href="{% url 'gerenciar_checklist' tcc.id %}" class="text-dark"><i class="bi bi-pencil-square"></i></a>
                     {% endif %}
@@ -197,10 +215,10 @@
                         {% if tcc.checklist.termo_autorizacao %}<i class="bi bi-check-circle-fill text-success"></i>{% else %}<i class="bi bi-x-circle text-danger"></i>{% endif %}
                     </div>
                     <div class="d-flex justify-content-between mb-2">
-                        <span>Nada Consta Biblio:</span>
+                        <span>Nada Consta Biblioteca:</span>
                         {% if tcc.checklist.nada_consta_biblioteca %}<i class="bi bi-check-circle-fill text-success"></i>{% else %}<i class="bi bi-x-circle text-danger"></i>{% endif %}
                     </div>
-                    <div class="d-flex justify-content-between mb-0">
+                    <div class="d-flex justify-content-between">
                         <span>Versão Final:</span>
                         {% if tcc.checklist.versao_final_entregue %}<i class="bi bi-check-circle-fill text-success"></i>{% else %}<i class="bi bi-x-circle text-danger"></i>{% endif %}
                     </div>
