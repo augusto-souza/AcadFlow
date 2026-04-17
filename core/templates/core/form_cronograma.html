@@ -1,9 +1,33 @@
 {% extends 'core/form_generic.html' %}
 
-{% block title %}Gerenciar Prazos - AcadFlow{% endblock %}
+{% block title %}
+    {% if editando %}Editar Prazo{% else %}Novo Prazo{% endif %} - AcadFlow
+{% endblock %}
 
-{% block form_icon %}<i class="bi bi-calendar-plus text-primary display-4"></i>{% endblock %}
-{% block form_title %}Novo Prazo Global{% endblock %}
-{% block form_subtitle %}Defina datas-limite para todos os alunos{% endblock %}
+{% block form_icon %}
+    <i class="bi bi-calendar-plus text-primary display-4"></i>
+{% endblock %}
 
-{% block back_url %}{% url 'dashboard' %}{% endblock %}
+{% block form_title %}
+    {% if editando %}Editar Etapa{% else %}Adicionar Etapa{% endif %}
+{% endblock %}
+
+{% block form_subtitle %}
+    Defina os prazos globais para todos os projetos de TCC.
+{% endblock %}
+
+{% block extra_form_content %}
+    {% if editando %}
+    <div class="alert alert-info py-2 small mb-4">
+        <i class="bi bi-info-circle me-1"></i> As alterações neste prazo afetarão a visualização de todos os utilizadores no dashboard.
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block submit_button_text %}
+    {% if editando %}Guardar Alterações{% else %}Registar Prazo{% endif %}
+{% endblock %}
+
+{% block back_url %}
+    {% url 'dashboard' %}
+{% endblock %}

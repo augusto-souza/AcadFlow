@@ -8,7 +8,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4 text-white">
             <div>
                 <h2 class="fw-bold mb-0">Gestão de TCCs</h2>
-                <p class="opacity-75 mb-0">Acompanhamento dos projetos e propostas</p>
+                <p class="opacity-75 mb-0">Acompanhamento de projetos e propostas</p>
             </div>
             {% if user.tipo == 'ALUNO' %}
             <a href="{% url 'cadastrar_tcc' %}" class="btn btn-light rounded-pill px-4 shadow fw-bold text-primary">
@@ -57,12 +57,11 @@
                                     <a href="{% url 'detalhes_tcc' trabalho.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">
                                         Ver
                                     </a>
-                                    
                                     {% if user == trabalho.aluno %}
                                     <a href="{% url 'deletar_tcc' trabalho.id %}" 
                                        class="btn btn-sm btn-outline-danger rounded-circle shadow-sm" 
-                                       title="Excluir Proposta"
-                                       onclick="return confirm('ATENÇÃO: Isso apagará permanentemente este TCC e todos os arquivos e feedbacks associados. Deseja continuar?')">
+                                       title="Eliminar Proposta"
+                                       onclick="return confirm('Tem certeza que deseja eliminar permanentemente este TCC?')">
                                         <i class="bi bi-trash"></i>
                                     </a>
                                     {% endif %}
@@ -73,7 +72,7 @@
                         <tr>
                             <td colspan="4" class="text-center py-5">
                                 <i class="bi bi-folder-x display-4 text-muted opacity-25"></i>
-                                <p class="text-muted mt-2">Nenhum trabalho registrado até o momento.</p>
+                                <p class="text-muted mt-2">Nenhum trabalho registado.</p>
                             </td>
                         </tr>
                         {% endfor %}
@@ -87,18 +86,33 @@
         <div class="d-flex justify-content-between align-items-center mb-4 text-white">
             <h4 class="fw-bold mb-0">Cronograma</h4>
             {% if user.tipo == 'COORDENADOR' %}
-            <a href="{% url 'gerenciar_cronograma' %}" class="btn btn-sm btn-outline-light rounded-circle shadow-sm" title="Configurar Prazos">
-                <i class="bi bi-gear-fill"></i>
+            <a href="{% url 'gerenciar_cronograma' %}" class="btn btn-sm btn-outline-light rounded-circle shadow-sm" title="Novo Prazo">
+                <i class="bi bi-plus-lg"></i>
             </a>
             {% endif %}
         </div>
 
         <div class="glass-card card p-4 border-0 shadow">
-            <h6 class="text-dark fw-bold mb-3 border-bottom pb-2">Próximas Etapas</h6>
+            <h6 class="text-dark fw-bold mb-3 border-bottom pb-2">Etapas Globais</h6>
             
             {% for prazo in prazos %}
             <div class="mb-4 position-relative ps-3 border-start border-2 border-primary">
-                <div class="small fw-bold text-dark mb-1">{{ prazo.descricao_etapa }}</div>
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="small fw-bold text-dark mb-1">{{ prazo.descricao_etapa }}</div>
+                    
+                    {% if user.tipo == 'COORDENADOR' %}
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'editar_cronograma' prazo.id %}" class="text-primary small" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="{% url 'deletar_cronograma' prazo.id %}" class="text-danger small" title="Eliminar"
+                           onclick="return confirm('Deseja remover este prazo do cronograma?')">
+                            <i class="bi bi-x-circle"></i>
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                
                 <div class="badge {% if prazo.data_limite|date:'Y-m-d' < now|date:'Y-m-d' %}bg-secondary{% else %}bg-danger-subtle text-danger{% endif %}" style="font-size: 0.75rem;">
                     <i class="bi bi-calendar-event"></i> {{ prazo.data_limite|date:"d/m - H:i" }}
                 </div>
@@ -108,12 +122,6 @@
                 <p class="text-muted small italic mb-0">Sem prazos definidos.</p>
             </div>
             {% endfor %}
-
-            <div class="mt-2 pt-3 border-top">
-                <small class="text-muted italic" style="font-size: 0.7rem;">
-                    Consulte as coordenações para dúvidas sobre as datas.
-                </small>
-            </div>
         </div>
     </div>
 </div>

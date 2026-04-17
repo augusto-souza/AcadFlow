@@ -308,3 +308,29 @@ def editar_feedback(request, feedback_id):
         'entrega': feedback.entrega, 
         'editando': True
     })
+
+@login_required
+def editar_cronograma(request, prazo_id):
+    if request.user.tipo != 'COORDENADOR':
+        return redirect('dashboard')
+        
+    prazo = get_object_or_404(CronogramaPrazo, pk=prazo_id)
+    
+    if request.method == 'POST':
+        form = CronogramaPrazoForm(request.POST, instance=prazo)
+        if form.is_valid():
+            form.save()
+            return redirect('dashboard')
+    else:
+        form = CronogramaPrazoForm(instance=prazo)
+    
+    return render(request, 'core/form_cronograma.html', {'form': form, 'editando': True})
+
+@login_required
+def deletar_cronograma(request, prazo_id):
+    if request.user.tipo != 'COORDENADOR':
+        return redirect('dashboard')
+        
+    prazo = get_object_or_404(CronogramaPrazo, pk=prazo_id)
+    prazo.delete()
+    return redirect('dashboard')

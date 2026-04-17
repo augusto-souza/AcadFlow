@@ -26,7 +26,9 @@ urlpatterns = [
     path('tcc/deletar/<int:tcc_id>/', views.deletar_tcc, name='deletar_tcc'),
     path('entrega/<int:entrega_id>/feedback/', views.dar_feedback, name='dar_feedback'),
     path('entrega/<int:entrega_id>/feedback/<int:parent_id>/', views.dar_feedback, name='responder_feedback'),
-    path('feedback/editar/<int:feedback_id>/', views.editar_feedback, name='editar_feedback'), # E esta
+    path('feedback/editar/<int:feedback_id>/', views.editar_feedback, name='editar_feedback'),
+    path('cronograma/editar/<int:prazo_id>/', views.editar_cronograma, name='editar_cronograma'),
+    path('cronograma/deletar/<int:prazo_id>/', views.deletar_cronograma, name='deletar_cronograma'), # E esta
 ]
 
 # Configuração para que o Django consiga mostrar os arquivos de upload no navegador
